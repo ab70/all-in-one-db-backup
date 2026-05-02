@@ -1,0 +1,39 @@
+services:
+  app:
+    image: davidcrty/databasement:1
+    container_name: databasement
+    restart: unless-stopped
+    ports:
+      - "2226:2226"
+    env_file: .env
+    environment:
+      HOME: /tmp
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:2226/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  worker:
+    image: davidcrty/databasement:1
+    container_name: databasement-worker
+    restart: unless-stopped
+    command: sh -c "php artisan db:wait --check-migrations && php artisan queue:work --queue=backups,default --tries=3 --timeout=3600 --sleep=3 --max-jobs=1000"
+    env_file: .env
+    environment:
+      HOME: /tmp
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./data:/data
+    depends_on:
+      app:
+        condition: service_healthy
+
+# networks:
+#   shared-db-network:
+#     external: true
