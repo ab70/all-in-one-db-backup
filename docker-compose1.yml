@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:
+  databasement:
+    image: docker.io/davidcrty/databasement:1
+    container_name: databasement
+    restart: unless-stopped
+    ports:
+      - "2226:2226"
+    environment:
+      DB_CONNECTION: sqlite
+      DB_DATABASE: /data/database.sqlite
+      ENABLE_QUEUE_WORKER: "true"
+    volumes:
+      # App data
+      - ./databasement-data:/data:z
+      # Backup storage
+      - ./dev-backups:/var/backup:z
